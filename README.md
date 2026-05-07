@@ -175,6 +175,8 @@ By design, this template has **no** backend. If you later need APIs:
 
 **The PR-preview workflow does nothing.** Expected until you set the `AZURE_STATIC_WEB_APPS_API_TOKEN` repo secret — see the CI/CD section above.
 
+**PR preview fails with `mcr.microsoft.com/appsvc/staticappsclient:stable: ... 403 Forbidden`.** Transient Microsoft Container Registry hiccup — the `Azure/static-web-apps-deploy@v1` action can't pull its upload-client image. Re-run the failed job (`gh run rerun <id> --failed`) and it usually clears immediately.
+
 ## License
 
 MIT — see [LICENSE](./LICENSE).
