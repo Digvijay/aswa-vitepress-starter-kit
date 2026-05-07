@@ -1,3 +1,5 @@
+# Dependabot version updates. Editing this file forces a re-evaluation
+# against the current workflow set.
 version: 2
 updates:
   - package-ecosystem: npm
