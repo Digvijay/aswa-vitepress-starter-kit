@@ -83,6 +83,28 @@ This repo's `main` branch is deployed to:
 
 Running on the **Free** tier — €0 / month, 100 GB bandwidth, free managed SSL, 3 PR previews. Left running as a live demo.
 
+## After your first deploy
+
+`azd up` gets you a live site, but a few one-time tweaks make it *yours*:
+
+1. **Make it look like your project** — search-replace `Digvijay/aswa-vitepress-starter-kit` across the repo (mostly [`docs/.vitepress/config.mts`](./docs/.vitepress/config.mts) for the GitHub URL, edit-link and social link). Update `sitemap.hostname` to your live URL and tweak `title` / `description`.
+2. **Wire up CI/CD** (see [CI/CD](#cicd) below):
+   ```bash
+   azd pipeline config        # OIDC, no secrets — every push to main redeploys
+   ```
+3. **Enable PR preview environments** (see [PR preview environments](#pr-preview-environments) below) — one `gh secret set` and every PR gets its own URL.
+4. **(Optional) Replace the favicon and OG image** in [`docs/public/`](./docs/public/) with your own branding.
+5. **(Optional) Protect `main`** — require the `build` check, disallow force-push:
+   ```bash
+   gh api -X PUT "repos/$OWNER/$REPO/branches/main/protection" \
+     -F required_status_checks.strict=true \
+     -F required_status_checks.contexts[]=build \
+     -F enforce_admins=false \
+     -F required_pull_request_reviews= \
+     -F restrictions= \
+     -F allow_force_pushes=false
+   ```
+
 ## Day-to-day
 
 ```bash
