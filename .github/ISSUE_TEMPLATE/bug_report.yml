@@ -1,0 +1,57 @@
+name: Bug report
+description: Something doesn't work as documented.
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Be specific. Include the exact command, full error output, and what you expected.
+    validations:
+      required: true
+  - type: input
+    id: azd-version
+    attributes:
+      label: azd version
+      placeholder: "azd version 1.24.x"
+    validations:
+      required: true
+  - type: input
+    id: node-version
+    attributes:
+      label: Node version
+      placeholder: "v20.x.x"
+    validations:
+      required: true
+  - type: input
+    id: az-version
+    attributes:
+      label: Azure CLI version
+      placeholder: "2.6x.x"
+  - type: dropdown
+    id: sku
+    attributes:
+      label: SWA SKU
+      options:
+        - Free
+        - Standard
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: OS
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Dev Container / Codespace
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal repro. If it only happens against your fork, link the diff.
+    validations:
+      required: true

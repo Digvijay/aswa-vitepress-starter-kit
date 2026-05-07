@@ -1,0 +1,22 @@
+name: Enhancement
+description: Suggest an improvement that keeps the template minimal.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's the problem this solves?
+      description: Describe the developer-experience or end-user pain point. Skip if it's purely cosmetic.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Does this add a new dependency, service, or required configuration?
+      description: If yes, explain why it's worth the cost. The template defaults to zero-config, zero-cost.

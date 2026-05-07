@@ -1,0 +1,19 @@
+# See https://aka.ms/azd-azure-yaml-schema
+name: aswa-vitepress-starter-kit
+metadata:
+  template: aswa-vitepress-starter-kit@0.1.0
+
+services:
+  web:
+    project: ./
+    language: js
+    host: staticwebapp
+    dist: docs/.vitepress/dist
+
+hooks:
+  prepackage:
+    shell: sh
+    run: npm ci && npm run docs:build
+    windows:
+      shell: pwsh
+      run: npm ci; npm run docs:build

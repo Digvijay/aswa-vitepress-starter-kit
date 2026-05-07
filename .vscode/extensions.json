@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "ms-azuretools.azure-dev",
+    "ms-azuretools.vscode-bicep",
+    "esbenp.prettier-vscode",
+    "bierner.markdown-mermaid",
+    "yzhang.markdown-all-in-one"
+  ]
+}

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Static Web Apps documentation
+    url: https://learn.microsoft.com/azure/static-web-apps/
+    about: Questions about Azure Static Web Apps itself (not this template) belong in Microsoft Learn / Q&A.
+  - name: VitePress documentation
+    url: https://vitepress.dev/
+    about: Questions about VitePress configuration belong upstream.
