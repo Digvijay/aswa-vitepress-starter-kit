@@ -33,7 +33,9 @@ aswa-vitepress-starter-kit/
 │   ├── public/
 │   │   └── staticwebapp.config.json
 │   └── .vitepress/config.mts     # Site config
-└── .github/workflows/            # GH Actions deploy
+└── .github/workflows/
+    ├── azure-dev.yml             # OIDC deploy on push to main (azd)
+    └── swa-pr-preview.yml        # PR preview environments
 ```
 
 ## Prerequisites
@@ -134,7 +136,21 @@ You can switch tiers in place — `azd up` after changing `SWA_SKU` updates the 
 azd pipeline config
 ```
 
-This creates an Entra application with a federated credential for the repository, writes the required GitHub secrets/variables, and uses the workflow under [`.github/workflows/`](./.github/workflows/). Pull requests automatically receive a [preview environment](https://learn.microsoft.com/azure/static-web-apps/preview-environments).
+This creates a User-Assigned Managed Identity in Azure with a federated credential for the repository, writes the OIDC variables to GitHub (no client secret), and adds [`.github/workflows/azure-dev.yml`](./.github/workflows/azure-dev.yml). Every push to `main` then runs `azd provision && azd deploy` automatically.
+
+### PR preview environments
+
+azd handles main-branch deploys, but it can't drive Static Web Apps' [preview environments](https://learn.microsoft.com/azure/static-web-apps/preview-environments) (each PR getting its own URL). For that the repo also ships [`.github/workflows/swa-pr-preview.yml`](./.github/workflows/swa-pr-preview.yml), which uses `Azure/static-web-apps-deploy@v1`. Enable it once:
+
+```bash
+# Get the SWA deployment token
+az staticwebapp secrets list \
+  --name $(azd env get-value AZURE_STATIC_WEB_APP_NAME 2>/dev/null || echo "<your-swa-name>") \
+  --resource-group $(azd env get-value AZURE_RESOURCE_GROUP) \
+  --query "properties.apiKey" -o tsv | gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN
+```
+
+Until that secret exists the workflow no-ops, so first-time forks don't get a red X.
 
 ## What's not in this template
 
@@ -155,9 +171,9 @@ By design, this template has **no** backend. If you later need APIs:
 
 **Build chunk-size warning** (`Some chunks are larger than 500 kB`). Comes from the Mermaid bundle. Harmless for a docs site — ignore, or remove `vitepress-plugin-mermaid` from [`package.json`](./package.json) and [`docs/.vitepress/config.mts`](./docs/.vitepress/config.mts) if you don't need Mermaid.
 
-**`azd pipeline config` fails with "insufficient privileges to create application"**. Your tenant blocks self-service Entra app creation. Either ask an admin to create the app + federated credential once, or fall back to deployment-token auth (`AZURE_STATIC_WEB_APPS_API_TOKEN` repo secret) — the workflow under [`.github/workflows/`](./.github/workflows/) already supports both.
+**`azd pipeline config` fails with "insufficient privileges to create application"**. Your tenant blocks self-service Entra app creation. Either ask an admin to create the User-Assigned Managed Identity + federated credential once, or skip OIDC and use only the [`swa-pr-preview.yml`](./.github/workflows/swa-pr-preview.yml) workflow with the SWA deployment token (set `AZURE_STATIC_WEB_APPS_API_TOKEN` and broaden its triggers to include `push`).
 
-**The committed workflow does nothing on first push.** That's intentional. The deploy steps are guarded on `AZURE_STATIC_WEB_APPS_API_TOKEN` so first-time forks don't get a red X. Either add the secret or run `azd pipeline config` to wire up OIDC.
+**The PR-preview workflow does nothing.** Expected until you set the `AZURE_STATIC_WEB_APPS_API_TOKEN` repo secret — see the CI/CD section above.
 
 ## License
 

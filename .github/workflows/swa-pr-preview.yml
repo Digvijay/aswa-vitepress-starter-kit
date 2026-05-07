@@ -1,0 +1,66 @@
+# PR preview environments for Azure Static Web Apps.
+#
+# azd handles main-branch deploys via OIDC (see azure-dev.yml). This workflow
+# exists *only* for SWA's PR preview feature, which requires the
+# Azure/static-web-apps-deploy@v1 action and a deployment token.
+#
+# Setup (one-time):
+#   1. In the Azure Portal, open your Static Web App > Manage deployment token > Copy.
+#   2. Add it as a repo secret named AZURE_STATIC_WEB_APPS_API_TOKEN
+#      (gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN --body "<token>").
+#
+# Until that secret exists, the job no-ops so first-time forks don't fail.
+name: PR preview (Static Web Apps)
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for deployment token
+        id: check
+        env:
+          SWA_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+        run: |
+          if [ -z "$SWA_TOKEN" ]; then
+            echo "AZURE_STATIC_WEB_APPS_API_TOKEN is not set; skipping PR preview."
+            echo "See the workflow header for setup instructions."
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.check.outputs.has_token == 'true'
+        uses: actions/checkout@v4
+
+      - if: steps.check.outputs.has_token == 'true' && github.event.action != 'closed'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - if: steps.check.outputs.has_token == 'true' && github.event.action != 'closed'
+        run: npm ci
+
+      - if: steps.check.outputs.has_token == 'true' && github.event.action != 'closed'
+        run: npm run docs:build
+
+      - if: steps.check.outputs.has_token == 'true'
+        name: Deploy / close PR preview
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: ${{ github.event.action == 'closed' && 'close' || 'upload' }}
+          app_location: '/'
+          output_location: 'docs/.vitepress/dist'
+          api_location: ''
+          skip_app_build: true
