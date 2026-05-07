@@ -39,7 +39,7 @@ jobs:
           fi
 
       - if: steps.check.outputs.has_token == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - if: steps.check.outputs.has_token == 'true' && github.event.action != 'closed'
         uses: actions/setup-node@v4
