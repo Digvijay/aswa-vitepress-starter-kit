@@ -24,6 +24,11 @@ A minimal [`azd`](https://aka.ms/azd) template that deploys a [VitePress](https:
 aswa-vitepress-starter-kit/
 ├── azure.yaml                    # azd service definition
 ├── package.json                  # vitepress + npm scripts
+├── lychee.toml                   # link-checker config
+├── .editorconfig                 # whitespace + EOL conventions
+├── SECURITY.md                   # private vulnerability reporting policy
+├── CONTRIBUTING.md
+├── LICENSE                       # MIT
 ├── infra/
 │   ├── main.bicep                # Static Web App via AVM
 │   └── main.parameters.json
@@ -33,9 +38,18 @@ aswa-vitepress-starter-kit/
 │   ├── public/
 │   │   └── staticwebapp.config.json
 │   └── .vitepress/config.mts     # Site config
-└── .github/workflows/
-    ├── azure-dev.yml             # OIDC deploy on push to main (azd)
-    └── swa-pr-preview.yml        # PR preview environments
+├── .devcontainer/                # Codespaces-ready Node + azd + az + gh
+└── .github/
+    ├── dependabot.yml
+    ├── lighthouserc.json         # Lighthouse budgets for PR previews
+    ├── ISSUE_TEMPLATE/
+    ├── PULL_REQUEST_TEMPLATE.md
+    └── workflows/
+        ├── azure-dev.yml         # OIDC deploy on push to main (azd)
+        ├── swa-pr-preview.yml    # PR preview environments + Lighthouse
+        ├── link-check.yml        # Lychee link checker
+        ├── codeql.yml            # GitHub CodeQL (Actions)
+        └── scorecard.yml         # OpenSSF Scorecard
 ```
 
 ## Prerequisites
@@ -157,7 +171,7 @@ Until that secret exists the workflow no-ops, so first-time forks don't get a re
 | Workflow | Trigger | Purpose |
 | --- | --- | --- |
 | [`link-check.yml`](./.github/workflows/link-check.yml) | PR + weekly | Lychee link checker over all `.md` files |
-| [`codeql.yml`](./.github/workflows/codeql.yml) | PR, push, weekly | GitHub CodeQL (JS/TS + Actions) |
+| [`codeql.yml`](./.github/workflows/codeql.yml) | PR, push, weekly | GitHub CodeQL (Actions) |
 | [`scorecard.yml`](./.github/workflows/scorecard.yml) | push + weekly | OpenSSF Scorecard supply-chain analysis |
 
 PR preview deploys also run a [Lighthouse audit](./.github/lighthouserc.json) against the preview URL (results posted to the run summary).
