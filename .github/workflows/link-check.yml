@@ -1,0 +1,60 @@
+# Verifies internal and external links in the docs.
+# Runs on PRs (fast feedback) and weekly (catches link rot in upstream sites).
+name: Link check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'SECURITY.md'
+      - 'lychee.toml'
+      - '.github/workflows/link-check.yml'
+  schedule:
+    - cron: '17 6 * * 1' # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write # weekly run opens an issue if links are broken
+
+concurrency:
+  group: link-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lychee:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore lychee cache
+        uses: actions/cache@v4
+        with:
+          path: .lycheecache
+          key: lychee-${{ github.run_id }}
+          restore-keys: lychee-
+
+      - name: Run lychee
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --config lychee.toml
+            --cache
+            --max-cache-age 7d
+            --no-progress
+            './**/*.md'
+            './docs/**/*.md'
+          fail: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Open issue on scheduled failure
+        if: failure() && github.event_name == 'schedule'
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: Link check failed (${{ github.run_id }})
+          content-filepath: ./lychee/out.md
+          labels: docs, broken-link

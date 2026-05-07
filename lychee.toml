@@ -1,0 +1,24 @@
+# Configuration for the lychee link checker.
+# https://lychee.cli.rs/usage/config/
+exclude_path = [
+  "node_modules",
+  "docs/.vitepress/cache",
+  "docs/.vitepress/dist",
+]
+
+# Skip these — they routinely 403/429 lychee even when they work in a browser.
+exclude = [
+  "^https://github\\.com/.*/edit/",
+  "^https://twitter\\.com/",
+  "^https://x\\.com/",
+  "^https://www\\.linkedin\\.com/",
+]
+
+# Throttle to be a good citizen.
+max_concurrency = 8
+timeout = 20
+retry_wait_time = 5
+max_retries = 2
+
+# Treat warnings (redirects, etc.) as success — only hard 4xx/5xx fail.
+accept = ["200..=299", "301", "302", "308", "403", "429"]

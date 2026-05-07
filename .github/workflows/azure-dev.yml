@@ -17,6 +17,10 @@ permissions:
   id-token: write
   contents: read
 
+# Serialize deploys to the same environment so two pushes don't race the SWA upload.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -31,8 +35,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
       - name: Install azd
         uses: Azure/setup-azd@v2
+
+      - name: Cache azd state
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.azd
+            ~/.azure
+          key: azd-${{ runner.os }}-${{ hashFiles('azure.yaml', 'infra/**') }}
+          restore-keys: azd-${{ runner.os }}-
+
       - name: Log in with Azure (Federated Credentials)
         run: |
           azd auth login `
@@ -41,10 +62,34 @@ jobs:
             --tenant-id "$Env:AZURE_TENANT_ID"
         shell: pwsh
 
-
       - name: Provision Infrastructure
         run: azd provision --no-prompt
 
       - name: Deploy Application
         run: azd deploy --no-prompt
-        
+
+      - name: Smoke test live site
+        shell: bash
+        run: |
+          set -euo pipefail
+          url=$(azd env get-value SERVICE_WEB_URI 2>/dev/null || true)
+          if [ -z "$url" ]; then
+            url=$(azd env get-value WEB_URI 2>/dev/null || true)
+          fi
+          if [ -z "$url" ]; then
+            echo "::warning::no service URL exposed by azd; skipping smoke test"
+            exit 0
+          fi
+          echo "Probing $url"
+          for i in 1 2 3 4 5; do
+            code=$(curl -fsSL -o /tmp/index.html -w '%{http_code}' "$url" || echo "000")
+            if [ "$code" = "200" ] && grep -q '<title>' /tmp/index.html; then
+              echo "OK ($code)"
+              exit 0
+            fi
+            echo "attempt $i: HTTP $code, retrying in 5s"
+            sleep 5
+          done
+          echo "::error::smoke test failed for $url"
+          exit 1
+

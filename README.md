@@ -152,6 +152,16 @@ az staticwebapp secrets list \
 
 Until that secret exists the workflow no-ops, so first-time forks don't get a red X.
 
+### Other CI
+
+| Workflow | Trigger | Purpose |
+| --- | --- | --- |
+| [`link-check.yml`](./.github/workflows/link-check.yml) | PR + weekly | Lychee link checker over all `.md` files |
+| [`codeql.yml`](./.github/workflows/codeql.yml) | PR, push, weekly | GitHub CodeQL (JS/TS + Actions) |
+| [`scorecard.yml`](./.github/workflows/scorecard.yml) | push + weekly | OpenSSF Scorecard supply-chain analysis |
+
+PR preview deploys also run a [Lighthouse audit](./.github/lighthouserc.json) against the preview URL (results posted to the run summary).
+
 ## What's not in this template
 
 By design, this template has **no** backend. If you later need APIs:
